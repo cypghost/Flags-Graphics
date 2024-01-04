@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vietnam Flag</title>
+  <style>
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    canvas {
+        padding-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Vietnam Flag</h1>
+  <p>Biruk Mesfin | ETS 0290/13 | Section A</p>
+  <br />
+  <canvas id="vietnam-flag" width="300" height="200"></canvas>
+  <script>
+    const canvas = document.getElementById("vietnam-flag");
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#DA251D";
+    boundaryFill(0, 0, [231, 0, 19, 255], [231, 0, 19, 255]);
+
+    ctx.fillStyle = "#FFD100";
+
+    // Resize and center the star
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const outerRadius = 60; // Change the outer radius as needed
+    const innerRadius = 23; // Change the inner radius as needed
+    const rotation = Math.PI/2;
+    star(centerX, centerY, outerRadius, innerRadius, rotation);
+
+    // Get the initial color of the center pixel of the star
+    const initialColor = ctx.getImageData(centerX, centerY, 1, 1).data;
+    floodFill(centerX, centerY, "#FFD100", initialColor);
+
+    function drawLineDDA(x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const steps = Math.max(Math.abs(dx), Math.abs(dy));
+      const xIncrement = dx / steps;
+      const yIncrement = dy / steps;
+      let x = x1;
+      let y = y1;
+      for (let i = 0; i <= steps; i++) {
+        ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+        x += xIncrement;
+        y += yIncrement;
+      }
+    }
+
+    function star(centerX, centerY, outerRadius, innerRadius, angle) {
+      const angleIncrement = Math.PI / 2.5;
+
+      let firstPointX = centerX + Math.cos(0 + angle) * innerRadius;
+      let firstPointY = centerY + Math.sin(0 + angle) * innerRadius;
+
+      for (let i = 0; i < 5; i++) {
+        let outerX = centerX + Math.cos(i * angleIncrement + angle) * innerRadius;
+        let outerY = centerY + Math.sin(i * angleIncrement + angle) * innerRadius;
+        let innerX = centerX + Math.cos((i + 0.5) * angleIncrement + angle) * outerRadius;
+        let innerY = centerY + Math.sin((i + 0.5) * angleIncrement + angle) * outerRadius;
+        if (i == 0) {
+          drawLineDDA(firstPointX, firstPointY, outerX, outerY);
+          drawLineDDA(outerX, outerY, innerX, innerY);
+        } else {
+          drawLineDDA(x, y, outerX, outerY);
+          drawLineDDA(outerX, outerY, innerX, innerY);
+        }
+        (x = innerX), (y = innerY);
+      }
+      drawLineDDA(x, y, firstPointX, firstPointY);
+    }
+
+    function isSameColor(color1, color2) {
+      return (
+        color1[0] === color2[0] &&
+        color1[1] === color2[1] &&
+        color1[2] === color2[2] &&
+        color1[3] === color2[3]
+      );
+    }
+
+    function boundaryFill(x, y, fillColor, boundaryColor) {
+      const stack = [];
+      stack.push({ x, y });
+
+      while (stack.length) {
+        const { x, y } = stack.pop();
+        const imageData = ctx.getImageData(x, y, 1, 1);
+        const pixel = imageData.data;
+
+        if (
+          x >= 0 &&
+          y >= 0 &&
+          x < canvas.width &&
+          y < canvas.height &&
+          !isSameColor(pixel, boundaryColor) &&
+          !isSameColor(pixel, fillColor)
+        ) {
+          ctx.fillStyle = `rgba(${fillColor[0]}, ${fillColor[1]}, ${
+            fillColor[2]
+          }, ${fillColor[3] / 255})`;
+          ctx.fillRect(x, y, 1, 1);
+
+          stack.push({ x: x + 1, y });
+          stack.push({ x: x - 1, y });
+          stack.push({ x, y: y + 1 });
+          stack.push({ x, y: y - 1 });
+        }
+      }
+    }
+
+    function putPixel(x, y) {
+      ctx.fillRect(x, y, 1, 1);
+    }
+
+    function floodFill(x, y, newColor, targetColor) {
+      const stack = [];
+      const initialColor = ctx.getImageData(x, y, 1, 1).data;
+
+      if (
+        initialColor[0] === newColor[0] &&
+        initialColor[1] === newColor[1] &&
+        initialColor[2] === newColor[2]
+      ) {
+        return;
+      }
+
+      stack.push({ x, y });
+
+      while (stack.length) {
+        const { x, y } = stack.pop();
+        const pixel = ctx.getImageData(x, y, 1, 1).data;
+
+        if (
+          x >= 0 &&
+          y >= 0 &&
+          x < canvas.width &&
+          y < canvas.height &&
+          pixel[0] === targetColor[0] &&
+          pixel[1] === targetColor[1] &&
+          pixel[2] === targetColor[2] &&
+          pixel[3] === targetColor[3]
+        ) {
+          ctx.fillStyle = newColor;
+          ctx.fillRect(x, y, 1, 1);
+
+          stack.push({ x: x + 1, y });
+          stack.push({ x: x - 1, y });
+          stack.push({ x, y: y + 1 });
+          stack.push({ x, y: y - 1 });
+        }
+      }
+    }
+  </script>
+</body>
+</html>
